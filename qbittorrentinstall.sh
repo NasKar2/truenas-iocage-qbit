@@ -146,6 +146,18 @@ iocage exec ${JAIL_NAME} cp -f /mnt/configs/ipfw_rules /config/ipfw_rules
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/openvpn.conf /config/openvpn.conf
 iocage exec ${JAIL_NAME} cp -f /mnt/configs/pass.privado.txt /config/pass.privado.txt
 
+# check tun mumber
+iocage exec ${JAIL_NAME} 'ifconfig tun create'
+TUN_NUM=$(iocage exec ${JAIL_NAME} ifconfig | grep tun | cut -d : -f1 | grep tun)
+echo "TUN_NUM is ${TUN_NUM}"
+SUBNET=$(iocage get ip4_addr qbittorrent | cut -d / -f2)
+echo "SUBNET is ${SUBNET}"
+IP_ID=${DEFAULT_GW_IP%.*}".0/"${SUBNET}
+echo "IP_ID is ${IP_ID}"
+iocage exec ${JAIL_NAME} sed -i '' "s|mytun|${TUN_NUM}|" /config/ipfw_rules
+iocage exec ${JAIL_NAME} sed -i '' "s|IP_ID|${IP_ID}|g" /config/ipfw_rules
+iocage exec ${JAIL_NAME} sed -i '' "s|dev\ tun|dev\ ${TUN_NUM}|" /config/openvpn.conf
+
 iocage exec ${JAIL_NAME} "chown 0:0 /config/ipfw_rules"
 iocage exec ${JAIL_NAME} "chmod 600 /config/ipfw_rules"
 iocage exec ${JAIL_NAME} sysrc firewall_enable="YES"
