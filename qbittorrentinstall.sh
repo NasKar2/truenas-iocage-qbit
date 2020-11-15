@@ -157,38 +157,10 @@ iocage exec ${JAIL_NAME} sysrc openvpn_configfile="/config/openvpn.conf"
 iocage exec ${JAIL_NAME} service ipfw start
 iocage exec ${JAIL_NAME} service openvpn start
 
-
-#iocage exec ${JAIL_NAME} sed -i '' "s|${old2_user}|${new2_user}|" /usr/local/etc/rc.d/deluge_web
-
-
-#iocage exec ${JAIL_NAME} service qbittorrent_web start
-#iocage exec ${JAIL_NAME} service qbittorrentd start
-#iocage exec ${JAIL_NAME} sed -i '' 's/\"allow_remote": \false/\"allow_remote": \true/g' /configs/core.conf
-iocage restart ${JAIL_NAME} 
-echo "qbittorrent should be available at http://${JAIL_IP}:8080"
-
-exit
-
-# Install deluge
-iocage exec ${JAIL_NAME} ln -s /usr/local/bin/mono /usr/bin/mono
-iocage exec ${JAIL_NAME} "fetch http://download.deluge.tv/v2/master/mono/NzbDrone.master.tar.gz -o /usr/local/share"
-iocage exec ${JAIL_NAME} "tar -xzvf /usr/local/share/NzbDrone.master.tar.gz -C /usr/local/share"
-iocage exec ${JAIL_NAME} "rm /usr/local/share/NzbDrone.master.tar.gz"
-iocage exec ${JAIL_NAME} "pw user add media -c media -u 8675309  -d /nonexistent -s /usr/bin/nologin"
-iocage exec ${JAIL_NAME} chown -R media:media /usr/local/share/NzbDrone /config
-iocage exec ${JAIL_NAME} -- mkdir /usr/local/etc/rc.d
-iocage exec ${JAIL_NAME} cp -f /mnt/configs/deluge /usr/local/etc/rc.d/deluge
-iocage exec ${JAIL_NAME} chmod u+x /usr/local/etc/rc.d/deluge
-iocage exec ${JAIL_NAME} sed -i '' "s/delugedata/${DELUGE_DATA}/" /usr/local/etc/rc.d/deluge
-iocage exec ${JAIL_NAME} sysrc "deluge_enable=YES"
-iocage exec ${JAIL_NAME} sysrc "deluge_user=media"
-iocage exec ${JAIL_NAME} service deluge start
-echo "deluge installed"
-
 #
 # Make pkg upgrade get the latest repo
-iocage exec ${JAIL_NAME} "mkdir -p /usr/local/etc/pkg/repos/"
-iocage exec ${JAIL_NAME} cp /mnt/configs/FreeBSD.conf /usr/local/etc/pkg/repos/FreeBSD.conf
+iocage exec ${JAIL_NAME} mkdir -p /usr/local/etc/pkg/repos/
+iocage exec ${JAIL_NAME} cp -f /mnt/configs/FreeBSD.conf /usr/local/etc/pkg/repos/FreeBSD.conf
 #iocage exec ${JAIL_NAME} echo -e "FreeBSD: {\nurl: \"pkg+http://pkg.FreeBSD.org/\${ABI}/latest\"\n}" > /usr/local/etc/pkg/repos/FreeBSD.conf
 
 #
@@ -196,16 +168,10 @@ iocage exec ${JAIL_NAME} cp /mnt/configs/FreeBSD.conf /usr/local/etc/pkg/repos/F
 iocage exec ${JAIL_NAME} pkg upgrade -y
 iocage restart ${JAIL_NAME}
 
-#
-# remove /mnt/configs as no longer needed
-#iocage fstab -r ${JAIL_NAME} ${CONFIGS_PATH} /mnt/configs nullfs rw 0 0
+#iocage exec ${JAIL_NAME} sed -i '' "s|${old2_user}|${new2_user}|" /usr/local/etc/rc.d/deluge_web
 
-#
-# Make media owner of data directories
-chown -R media:media ${POOL_PATH}/${MEDIA_LOCATION}
-chown -R media:media ${POOL_PATH}/${TORRENTS_LOCATION}
 
-echo
+#iocage exec ${JAIL_NAME} sed -i '' 's/\"allow_remote": \false/\"allow_remote": \true/g' /configs/core.conf
+iocage restart ${JAIL_NAME} 
+echo "qbittorrent should be available at http://${JAIL_IP}:8080"
 
-echo "QBITTORRENT should be available at http://${JAIL_IP}:8989"
-echo "TV Shows will be located at "${POOL_PATH}/${MEDIA_LOCATION}/videos/tvshows
